@@ -104,8 +104,8 @@ class Utils {
         });
 
 
-        final Double latitude = location.getLatitude() + 0.152068;
-        final Double longitude = location.getLongitude()  +0.1398472;
+        final Double latitude = location.getLatitude();
+        final Double longitude = location.getLongitude();
         Log.i(TAG , "Found - here: " + device_idNumber+" "+latitude +" "+longitude);
         service.updateLocation(device_idNumber,latitude,longitude).enqueue(new Callback<ScreenModule>() {
             @NonNull
