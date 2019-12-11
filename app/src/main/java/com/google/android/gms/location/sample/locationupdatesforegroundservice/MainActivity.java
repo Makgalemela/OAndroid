@@ -24,6 +24,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.location.Location;
+import android.media.MediaPlayer;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -42,6 +43,7 @@ import androidx.annotation.NonNull;
 import com.google.android.material.snackbar.Snackbar;
 import androidx.core.app.ActivityCompat;
 
+import android.view.SurfaceHolder;
 import android.widget.Toast;
 import android.widget.VideoView;
 
@@ -56,6 +58,8 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+
+import static android.widget.Toast.makeText;
 
 /**
  * The only activity in this sample.
@@ -93,7 +97,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * notification. This dismisses the notification and stops the service.
  */
 public class MainActivity extends AppCompatActivity implements
-        SharedPreferences.OnSharedPreferenceChangeListener {
+        SharedPreferences.OnSharedPreferenceChangeListener ,
+        SurfaceHolder.Callback, MediaPlayer.OnPreparedListener {
     private static final String TAG = MainActivity.class.getSimpleName();
 
     // Used in checking for runtime permissions.
@@ -151,11 +156,6 @@ public class MainActivity extends AppCompatActivity implements
             }
         }
 
-//        Retrofit retrofit = new Retrofit.Builder()
-//                .baseUrl("https://iqmediaapp.herokuaap.com")
-//                .addConverterFactory(GsonConverterFactory.create())
-//                .build();
-//        final AdvModuleService advService = retrofit.create(AdvModuleService.class);
     }
 
     @Override
@@ -183,6 +183,7 @@ public class MainActivity extends AppCompatActivity implements
                 }
                 number = Device_id.getText().toString();
                 playVideo();
+
 
             }
         });
@@ -273,28 +274,33 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-
+//
     public void playVideo(){
 
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://iqmediaapp.herokuaap.com")
+                .baseUrl("https://iqmediaapp.herokuapp.com")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         final AdvModuleService advService = retrofit.create(AdvModuleService.class);
 
-        advService.AdList().enqueue(new Callback< List<AdvModule>>(){
+        advService.all().enqueue(new Callback< List<AdvModule>>(){
+            @NonNull
+            @Override
+            public void onResponse(Call<List<AdvModule>> Call , Response<List<AdvModule>> resp) {
 
-            public void onResponse(Call<List<AdvModule>> Call , Response<List<AdvModule>> resp){
+                assert resp.body() != null;
                 for(AdvModule adv : resp.body()){
+                    if(adv.QueuePlayer == true){
+                        String vidAddress = adv.adMedia;
+                        Uri vidUri = Uri.parse(vidAddress);
+                        mediaSection_id.setVideoURI(vidUri);
+                        mediaSection_id.start();
+                    }
 
-                    Toast.makeText( context, adv.adTitle, Toast.LENGTH_LONG).show();
-//                    String vidAddress = adv.adMedia;
-//                    Uri vidUri = Uri.parse(vidAddress);
-//                    mediaSection_id.setVideoURI(vidUri);
-//                    mediaSection_id.start();
                 }
             }
-
+            @NonNull
+            @Override
             public void onFailure(Call<List<AdvModule>> _, Throwable t){
                 t.printStackTrace();
             }
@@ -343,6 +349,30 @@ public class MainActivity extends AppCompatActivity implements
             }
         }
     }
+
+
+    ///MEDIA PLAYER HERE
+    @Override
+    public void onPrepared(MediaPlayer mp) {
+
+    }
+
+    @Override
+    public void surfaceCreated(SurfaceHolder holder) {
+
+    }
+
+    @Override
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
+
+    }
+
+    ///MEDIAPLAYER ENDS HERE
 
     /**
      * Receiver for broadcasts sent by {@link LocationUpdatesService}.

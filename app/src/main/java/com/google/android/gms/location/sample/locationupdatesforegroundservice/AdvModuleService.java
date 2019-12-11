@@ -8,5 +8,5 @@ import retrofit2.http.GET;
 public interface AdvModuleService {
 
     @GET("api/adv")
-    Call<List<AdvModule>> AdList();
+    Call<List<AdvModule>> all();
 }

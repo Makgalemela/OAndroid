@@ -11,5 +11,5 @@ public class AdvModule {
     String adMedia;
 
     @SerializedName("QueuePlayer")
-    String QueuePlayer;
+    boolean QueuePlayer;
 }
