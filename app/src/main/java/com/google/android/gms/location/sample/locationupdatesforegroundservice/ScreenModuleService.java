@@ -12,11 +12,10 @@ import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
-public interface ScreenModuleService {
+public interface ScreenModuleService  {
 
     @GET("api")
     Call<List<ScreenModule>> all();
-
 
     @GET("api/{id}")
     Call<ScreenModule> get(@Path("id") int id);

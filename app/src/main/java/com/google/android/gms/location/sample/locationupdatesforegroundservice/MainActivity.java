@@ -42,14 +42,14 @@ import androidx.annotation.NonNull;
 import com.google.android.material.snackbar.Snackbar;
 import androidx.core.app.ActivityCompat;
 
-import android.net.Uri;
-import android.widget.MediaController;
+import android.widget.Toast;
 import android.widget.VideoView;
 
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
+
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -111,6 +111,7 @@ public class MainActivity extends AppCompatActivity implements
 
     static String number = "";
 
+    Context context;
     // UI elements.
     private Button mRequestLocationUpdatesButton;
     private Button mRemoveLocationUpdatesButton;
@@ -149,6 +150,12 @@ public class MainActivity extends AppCompatActivity implements
                 requestPermissions();
             }
         }
+
+//        Retrofit retrofit = new Retrofit.Builder()
+//                .baseUrl("https://iqmediaapp.herokuaap.com")
+//                .addConverterFactory(GsonConverterFactory.create())
+//                .build();
+//        final AdvModuleService advService = retrofit.create(AdvModuleService.class);
     }
 
     @Override
@@ -175,10 +182,8 @@ public class MainActivity extends AppCompatActivity implements
                     mService.requestLocationUpdates();
                 }
                 number = Device_id.getText().toString();
-                String vidAddress = "https://archive.org/download/ksnn_compilation_master_the_internet/ksnn_compilation_master_the_internet_512kb.mp4";
-                Uri vidUri = Uri.parse(vidAddress);
-                mediaSection_id.setVideoURI(vidUri);
-                mediaSection_id.start();
+                playVideo();
+
             }
         });
 
@@ -186,6 +191,7 @@ public class MainActivity extends AppCompatActivity implements
             @Override
             public void onClick(View view) {
                 mService.removeLocationUpdates();
+                mediaSection_id.stopPlayback();
             }
         });
 
@@ -265,6 +271,36 @@ public class MainActivity extends AppCompatActivity implements
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     REQUEST_PERMISSIONS_REQUEST_CODE);
         }
+    }
+
+
+    public void playVideo(){
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://iqmediaapp.herokuaap.com")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        final AdvModuleService advService = retrofit.create(AdvModuleService.class);
+
+        advService.AdList().enqueue(new Callback< List<AdvModule>>(){
+
+            public void onResponse(Call<List<AdvModule>> Call , Response<List<AdvModule>> resp){
+                for(AdvModule adv : resp.body()){
+
+                    Toast.makeText( context, adv.adTitle, Toast.LENGTH_LONG).show();
+//                    String vidAddress = adv.adMedia;
+//                    Uri vidUri = Uri.parse(vidAddress);
+//                    mediaSection_id.setVideoURI(vidUri);
+//                    mediaSection_id.start();
+                }
+            }
+
+            public void onFailure(Call<List<AdvModule>> _, Throwable t){
+                t.printStackTrace();
+            }
+        });
+
+
     }
 
     /**
