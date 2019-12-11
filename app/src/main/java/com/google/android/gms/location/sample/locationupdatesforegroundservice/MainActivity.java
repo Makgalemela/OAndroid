@@ -42,6 +42,10 @@ import androidx.annotation.NonNull;
 import com.google.android.material.snackbar.Snackbar;
 import androidx.core.app.ActivityCompat;
 
+import android.net.Uri;
+import android.widget.MediaController;
+import android.widget.VideoView;
+
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -111,6 +115,7 @@ public class MainActivity extends AppCompatActivity implements
     private Button mRequestLocationUpdatesButton;
     private Button mRemoveLocationUpdatesButton;
     private EditText Device_id;
+    private VideoView mediaSection_id;
     //ActivityCompat.requestPermissions(MainActivity.this ,new String[]{Manifest.permission.ACCESS_FINE_LOCATION},123);
 
 
@@ -156,6 +161,9 @@ public class MainActivity extends AppCompatActivity implements
         mRequestLocationUpdatesButton = (Button) findViewById(R.id.request_location_updates_button);
         mRemoveLocationUpdatesButton = (Button) findViewById(R.id.remove_location_updates_button);
         Device_id = findViewById(R.id.Device_id);
+        mediaSection_id = findViewById(R.id.mediaSection_id);
+
+
 
         ActivityCompat.requestPermissions(MainActivity.this , new String[]{Manifest.permission.ACCESS_FINE_LOCATION},123);
         mRequestLocationUpdatesButton.setOnClickListener(new View.OnClickListener() {
@@ -167,6 +175,10 @@ public class MainActivity extends AppCompatActivity implements
                     mService.requestLocationUpdates();
                 }
                 number = Device_id.getText().toString();
+                String vidAddress = "https://archive.org/download/ksnn_compilation_master_the_internet/ksnn_compilation_master_the_internet_512kb.mp4";
+                Uri vidUri = Uri.parse(vidAddress);
+                mediaSection_id.setVideoURI(vidUri);
+                mediaSection_id.start();
             }
         });
 
