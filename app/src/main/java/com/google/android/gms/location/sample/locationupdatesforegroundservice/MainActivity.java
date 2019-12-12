@@ -24,12 +24,14 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.location.Location;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
 
 import android.Manifest;
@@ -44,6 +46,7 @@ import com.google.android.material.snackbar.Snackbar;
 import androidx.core.app.ActivityCompat;
 
 import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
@@ -51,7 +54,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.Vector;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -121,7 +126,14 @@ public class MainActivity extends AppCompatActivity implements
     private Button mRequestLocationUpdatesButton;
     private Button mRemoveLocationUpdatesButton;
     private EditText Device_id;
-    private VideoView mediaSection_id;
+    private SurfaceView mediaSection_id;
+
+    private MediaPlayer mediaPlayer;
+    private SurfaceHolder vidHolder;
+    String vidAddress = "https://archive.org/download/ksnn_compilation_master_the_internet/ksnn_compilation_master_the_internet_512kb.mp4";
+    Vector<String> media = new Vector<String>();
+    private int  values = 0;
+
     //ActivityCompat.requestPermissions(MainActivity.this ,new String[]{Manifest.permission.ACCESS_FINE_LOCATION},123);
 
 
@@ -156,6 +168,10 @@ public class MainActivity extends AppCompatActivity implements
             }
         }
 
+        mediaSection_id = (SurfaceView) findViewById(R.id.mediaSection_id);
+        vidHolder = mediaSection_id.getHolder();
+        vidHolder.addCallback(this);
+
     }
 
     @Override
@@ -166,9 +182,9 @@ public class MainActivity extends AppCompatActivity implements
                 .registerOnSharedPreferenceChangeListener(this);
 
         mRequestLocationUpdatesButton = (Button) findViewById(R.id.request_location_updates_button);
-        mRemoveLocationUpdatesButton = (Button) findViewById(R.id.remove_location_updates_button);
+
         Device_id = findViewById(R.id.Device_id);
-        mediaSection_id = findViewById(R.id.mediaSection_id);
+//        mediaSection_id = findViewById(R.id.mediaSection_id);
 
 
 
@@ -183,18 +199,14 @@ public class MainActivity extends AppCompatActivity implements
                 }
                 number = Device_id.getText().toString();
                 playVideo();
+                mRequestLocationUpdatesButton.setVisibility(view.GONE);
 
+                Device_id.setVisibility(view.GONE);
 
             }
         });
 
-        mRemoveLocationUpdatesButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mService.removeLocationUpdates();
-                mediaSection_id.stopPlayback();
-            }
-        });
+
 
         // Restore the state of the buttons when the activity (re)launches.
         setButtonsState(Utils.requestingLocationUpdates(this));
@@ -276,6 +288,13 @@ public class MainActivity extends AppCompatActivity implements
 
 //
     public void playVideo(){
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        android.widget.LinearLayout.LayoutParams params = (android.widget.LinearLayout.LayoutParams) mediaSection_id.getLayoutParams();
+        params.width = metrics.widthPixels;
+        params.height = metrics.heightPixels;
+        params.leftMargin = 0;
+        mediaSection_id.setLayoutParams(params);
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://iqmediaapp.herokuapp.com")
@@ -289,14 +308,41 @@ public class MainActivity extends AppCompatActivity implements
             public void onResponse(Call<List<AdvModule>> Call , Response<List<AdvModule>> resp) {
 
                 assert resp.body() != null;
+
                 for(AdvModule adv : resp.body()){
                     if(adv.QueuePlayer == true){
-                        String vidAddress = adv.adMedia;
-                        Uri vidUri = Uri.parse(vidAddress);
-                        mediaSection_id.setVideoURI(vidUri);
-                        mediaSection_id.start();
+                        media.add(adv.adMedia);
+                        Log.i(TAG ,adv.adTitle);
                     }
 
+                }
+                try {
+
+                    mediaPlayer = new MediaPlayer();
+                    mediaPlayer.setDisplay(vidHolder);
+                        Log.i(TAG, (String) media.get(values));
+                        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                            @Override
+                            public void onCompletion(MediaPlayer mp) {
+
+                                values  +=1;
+                                if(values == media.size())
+                                    values = 0;
+                                media.clear();
+                                playVideo();
+                                mediaPlayer.reset();
+                                Log.i(TAG , String.valueOf(values));
+
+                            }
+                        });
+                        mediaPlayer.setDataSource(String.valueOf(media.get(values)));
+                        mediaPlayer.prepare();
+//                    mediaPlayer.setOnPreparedListener(onPrepared());
+                        mediaPlayer.start();
+                        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                }
+                catch(Exception e){
+                    e.printStackTrace();
                 }
             }
             @NonNull
@@ -354,11 +400,24 @@ public class MainActivity extends AppCompatActivity implements
     ///MEDIA PLAYER HERE
     @Override
     public void onPrepared(MediaPlayer mp) {
-
+        mediaPlayer.start();
     }
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
+//        playVideo();
+//        try {
+//                vidAddress = media.elementAt(0);
+//                mediaPlayer = new MediaPlayer();
+//                mediaPlayer.setDisplay(vidHolder);
+//                mediaPlayer.setDataSource(vidAddress);
+//                mediaPlayer.prepare();
+//                mediaPlayer.setOnPreparedListener(this);
+//                mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+//        }
+//        catch(Exception e){
+//            e.printStackTrace();
+//        }
 
     }
 
@@ -408,11 +467,11 @@ public class MainActivity extends AppCompatActivity implements
 
     private void setButtonsState(boolean requestingLocationUpdates) {
         if (requestingLocationUpdates) {
-            mRequestLocationUpdatesButton.setEnabled(false);
-            mRemoveLocationUpdatesButton.setEnabled(true);
+            mRequestLocationUpdatesButton.setEnabled(true);
+
         } else {
             mRequestLocationUpdatesButton.setEnabled(true);
-            mRemoveLocationUpdatesButton.setEnabled(false);
+
         }
     }
 }

@@ -39,13 +39,7 @@
         android:layout_height="wrap_content"
         android:text="@string/request_location_updates" />
 
-    <Button
-        android:id="@+id/remove_location_updates_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/remove_location_updates" />
-
-    <SurfaceView
+    <VideoView
         android:id="@+id/mediaSection_id"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
